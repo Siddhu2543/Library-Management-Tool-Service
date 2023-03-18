@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Library_Management_Tool.Models;
+using Library_Management_Tool.ViewModels;
 
 namespace Library_Management_Tool.Controllers
 {
@@ -113,6 +114,20 @@ namespace Library_Management_Tool.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        [HttpPost("Login")]
+        public async Task<ActionResult<Admin>> Login(Login login)
+        {
+            var admin = await _context.Admins.Where(a => a.Username == login.Username && a.Password == login.Password).FirstOrDefaultAsync();
+            if(admin == null)
+            {
+                return NotFound();
+            }
+            else
+            {
+                return CreatedAtAction("GetAdmin", new { id = admin.Id }, admin);
+            }
         }
 
         private bool AdminExists(int id)
