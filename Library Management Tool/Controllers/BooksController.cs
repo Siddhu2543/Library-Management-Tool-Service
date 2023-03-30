@@ -115,6 +115,107 @@ namespace Library_Management_Tool.Controllers
             return NoContent();
         }
 
+        [HttpGet("Search/Book-Name/{name}")]
+        public async Task<ActionResult<IEnumerable<Book>>> SearchBookByBookName(string name)
+        {
+            if (_context.Books == null)
+            {
+                return NotFound();
+            }
+            var books = _context.Books.Where((b) => b.Title.Contains(name)).ToList();
+
+            if (books.Count == 0)
+            {
+                return NotFound();
+            }
+
+            return books;
+        }
+
+        [HttpGet("Search/Author-Name/{name}")]
+        public async Task<ActionResult<IEnumerable<Book>>> SearchBookByAuthorName(string name)
+        {
+            if (_context.Books == null)
+            {
+                return NotFound();
+            }
+            var books = _context.Books.Where((b) => b.Author.Contains(name)).ToList();
+
+            if (books.Count == 0)
+            {
+                return NotFound();
+            }
+
+            return books;
+        }
+
+        [HttpGet("NewIssue/{id}")]
+        public async Task<IActionResult> NewIssue(int id)
+        {
+            var book = _context.Books.Find(id);
+            if(book == null)
+            {
+                return NotFound();
+            }
+            if(book.Availability == 0)
+            {
+                return BadRequest();
+            }
+            book.Availability = book.Availability - 1;
+            
+            _context.Entry(book).State = EntityState.Modified;
+            
+            try
+            {
+                await _context.SaveChangesAsync();
+                return NoContent();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!BookExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+        }
+
+        [HttpGet("CancelIssue/{id}")]
+        public async Task<IActionResult> CancelIssue(int id)
+        {
+            var book = _context.Books.Find(id);
+            if (book == null)
+            {
+                return NotFound();
+            }
+            if (book.Availability == 0)
+            {
+                return BadRequest();
+            }
+            book.Availability = book.Availability + 1;
+
+            _context.Entry(book).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                return NoContent();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!BookExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+        }
         private bool BookExists(int id)
         {
             return (_context.Books?.Any(e => e.Id == id)).GetValueOrDefault();

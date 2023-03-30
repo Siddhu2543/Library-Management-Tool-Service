@@ -115,6 +115,44 @@ namespace Library_Management_Tool.Controllers
             return NoContent();
         }
 
+        [HttpGet("CurrentMemberIssueCount/{userId}")]
+        public async Task<ActionResult<int>> GetCurrentMemberIssueCount(int userId)
+        {
+            bool doesMemberExist = (_context.Members?.Any(m => m.Id == userId)).GetValueOrDefault();
+            if (!doesMemberExist)
+            {
+                return BadRequest();
+            }
+            var count = _context.Issues.Where(i => i.MemberId == userId && i.Status == "Issued").Count();
+            return Ok(count);
+        }
+
+        [HttpGet("CurrentBookIssueCount/{bookId}")]
+        public async Task<ActionResult<int>> GetCurrentBookIssueCount(int bookId)
+        {
+            bool doesBookExist = (_context.Books?.Any(b => b.Id == bookId)).GetValueOrDefault();
+            if (!doesBookExist)
+            {
+                return BadRequest();
+            }
+            var count = _context.Issues.Where(i => i.BookId== bookId && i.Status == "Issued").Count();
+            return Ok(count);
+        }
+
+        [HttpGet("IsBookIssuedToMember/{bookId}/{memberId}")]
+        public async Task<ActionResult<bool>> IsBookIssuedToMember(int bookId, int memberId)
+        {
+            bool doesBookExist = (_context.Books?.Any(b => b.Id == bookId)).GetValueOrDefault();
+            bool doesMemberExist = (_context.Members?.Any(m => m.Id == memberId)).GetValueOrDefault();
+            if(doesBookExist && doesMemberExist)
+            {
+                var result = _context.Issues.Where(i => i.BookId == bookId && i.MemberId == memberId && i.Status == "Issued").Any();
+
+                return Ok(result);
+            }
+            return BadRequest();
+        }
+
         private bool IssueExists(int id)
         {
             return (_context.Issues?.Any(e => e.Id == id)).GetValueOrDefault();

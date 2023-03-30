@@ -7,7 +7,8 @@
         public string Address { get; set; }
         public long Mobile { get; set; }
         public DateTime Dob { get; set; }
-        public string Type { get; set; }
+        public string Status { get; set; } = "Active";
+        public DateTime AdmissionDate { get; set; }
         public DateTime ExpiryDate { get; set; }
     }
 }

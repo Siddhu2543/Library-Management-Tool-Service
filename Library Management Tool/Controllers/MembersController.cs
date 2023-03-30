@@ -115,6 +115,23 @@ namespace Library_Management_Tool.Controllers
             return NoContent();
         }
 
+        [HttpGet("Search/{name}")]
+        public async Task<ActionResult<IEnumerable<Member>>> SearchMemberByName(string name)
+        {
+            if (_context.Members == null)
+            {
+                return NotFound();
+            }
+            var members = _context.Members.Where((m) => m.Name.Contains(name)).ToList();
+
+            if (members.Count == 0)
+            {
+                return NotFound();
+            }
+
+            return members;
+        }
+
         private bool MemberExists(int id)
         {
             return (_context.Members?.Any(e => e.Id == id)).GetValueOrDefault();

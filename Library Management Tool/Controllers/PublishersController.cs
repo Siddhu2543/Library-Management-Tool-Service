@@ -115,6 +115,23 @@ namespace Library_Management_Tool.Controllers
             return NoContent();
         }
 
+        [HttpGet("Search/{name}")]
+        public async Task<ActionResult<IEnumerable<Publisher>>> SearchPublisher(string name)
+        {
+            if (_context.Publishers == null)
+            {
+                return NotFound();
+            }
+            var publishers = _context.Publishers.Where((p) => p.Name.Contains(name) || p.Address.Contains(name)).ToList();
+
+            if (publishers.Count == 0)
+            {
+                return NotFound();
+            }
+
+            return publishers;
+        }
+
         private bool PublisherExists(int id)
         {
             return (_context.Publishers?.Any(e => e.Id == id)).GetValueOrDefault();
