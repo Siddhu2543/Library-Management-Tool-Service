@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualBasic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Library_Management_Tool.Models
 {
@@ -12,7 +13,10 @@ namespace Library_Management_Tool.Models
         public int TotalCopies { get; set; }
         public int Availability { get; set; }
         public int PublisherId { get; set; }
+        public Publisher Publisher { get; set; }
         public DateTime AddedDate { get; set; }
         public string ImageURL { get; set; }
+
+        public ICollection<Issue> Issues { get; set; }
     }
 }

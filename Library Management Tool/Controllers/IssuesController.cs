@@ -28,7 +28,103 @@ namespace Library_Management_Tool.Controllers
           {
               return NotFound();
           }
-            return await _context.Issues.ToListAsync();
+            return await _context.Issues.Where(i => i.Status != "Returned").ToListAsync();
+        }
+
+        [HttpGet("Members/{id}")]
+        public async Task<ActionResult<IEnumerable<Issue>>> GetMemberIssues(int id)
+        {
+            if (_context.Issues == null)
+            {
+                return NotFound();
+            }
+            return await _context.Issues.Where((i) => i.MemberId == id && i.Status == "Issued" || i.Status == "Renewed").ToListAsync();
+        }
+
+        [HttpGet("Renew/{id}")]
+        public async Task<ActionResult<Issue>> RenewBook(int id)
+        {
+            if (_context.Issues == null)
+            {
+                return NotFound();
+            }
+            var issue = await _context.Issues.FindAsync(id);
+            if(issue == null)
+            {
+                return NotFound();
+            }
+            issue.DueDate = issue.DueDate.AddMonths(1);
+            issue.Status = "Renewed";
+            _context.Entry(issue).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!IssueExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return CreatedAtAction("GetIssue", new { id = issue.Id }, issue);
+        }
+
+        [HttpGet("Return/{id}")]
+        public async Task<ActionResult> ReturnBook(int id)
+        {
+            if (_context.Issues == null)
+            {
+                return NotFound();
+            }
+            var issue = await _context.Issues.FindAsync(id);
+            var book = await _context.Books.FindAsync(issue.BookId);
+
+            if (issue == null || book == null)
+            {
+                return NotFound();
+            }
+
+            issue.ReturnDate = DateTime.Now;
+            issue.Status = "Returned";
+            book.Availability += 1;
+
+            _context.Entry(issue).State = EntityState.Modified;
+            _context.Entry(book).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!IssueExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return CreatedAtAction("GetIssue", new { id = issue.Id }, issue);
+        }
+
+        [HttpGet("Books/{id}")]
+        public async Task<ActionResult<IEnumerable<Issue>>> GetBookIssues(int id)
+        {
+            if (_context.Issues == null)
+            {
+                return NotFound();
+            }
+            return await _context.Issues.Where((i) => i.BookId == id && i.Status == "Issued" || i.Status == "Renewed").ToListAsync();
         }
 
         // GET: api/Issues/5
@@ -123,7 +219,7 @@ namespace Library_Management_Tool.Controllers
             {
                 return BadRequest();
             }
-            var count = _context.Issues.Where(i => i.MemberId == userId && i.Status == "Issued").Count();
+            var count = _context.Issues.Where(i => i.MemberId == userId && i.Status == "Issued" || i.Status == "Renewed").Count();
             return Ok(count);
         }
 
@@ -135,7 +231,7 @@ namespace Library_Management_Tool.Controllers
             {
                 return BadRequest();
             }
-            var count = _context.Issues.Where(i => i.BookId== bookId && i.Status == "Issued").Count();
+            var count = _context.Issues.Where(i => i.BookId== bookId && i.Status == "Issued" || i.Status == "Renewed").Count();
             return Ok(count);
         }
 
@@ -146,11 +242,46 @@ namespace Library_Management_Tool.Controllers
             bool doesMemberExist = (_context.Members?.Any(m => m.Id == memberId)).GetValueOrDefault();
             if(doesBookExist && doesMemberExist)
             {
-                var result = _context.Issues.Where(i => i.BookId == bookId && i.MemberId == memberId && i.Status == "Issued").Any();
+                var result = _context.Issues.Where(i => i.BookId == bookId && i.MemberId == memberId && (i.Status == "Issued" || i.Status == "Renewed")).Any();
 
                 return Ok(result);
             }
             return BadRequest();
+        }
+
+        [HttpGet("Search/Book/{name}")]
+        public async Task<ActionResult<IEnumerable<Issue>>> SearchIssueByBookName(string name)
+        {
+            if (_context.Issues == null)
+            {
+                return NotFound();
+            }
+
+            var issues = _context.Issues.ToList().Where((i) => i.Status != "Returned" && _context.Books.Find(i.BookId).Title.ToUpper().Contains(name.ToUpper())).ToList();
+
+            if (issues.Count == 0)
+            {
+                return NotFound();
+            }
+
+            return issues;
+        }
+
+        [HttpGet("Search/Member/{name}")]
+        public async Task<ActionResult<IEnumerable<Issue>>> SearchIssueByMemberName(string name)
+        {
+            if (_context.Issues == null)
+            {
+                return NotFound();
+            }
+            var issues = _context.Issues.ToList().Where((i) => i.Status != "Returned" && _context.Members.Find(i.MemberId).Name.ToUpper().Contains(name.ToUpper())).ToList();
+
+            if (issues.Count == 0)
+            {
+                return NotFound();
+            }
+
+            return issues;
         }
 
         private bool IssueExists(int id)

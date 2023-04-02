@@ -28,7 +28,7 @@ namespace Library_Management_Tool.Controllers
           {
               return NotFound();
           }
-            return await _context.Members.ToListAsync();
+            return await _context.Members.Where(m => m.Status == "Active" && m.ExpiryDate > DateTime.Now).ToListAsync();
         }
 
         // GET: api/Members/5
@@ -40,10 +40,31 @@ namespace Library_Management_Tool.Controllers
               return NotFound();
           }
             var member = await _context.Members.FindAsync(id);
-
+            
             if (member == null)
             {
                 return NotFound();
+            }
+
+            if (member.ExpiryDate <= DateTime.Now)
+            {
+                member.Status = "Inactive";
+                _context.Entry(member).State = EntityState.Modified;
+                try
+                {
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!MemberExists(id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
             }
 
             return member;

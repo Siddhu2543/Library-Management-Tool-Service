@@ -10,5 +10,7 @@
         public string Status { get; set; } = "Active";
         public DateTime AdmissionDate { get; set; }
         public DateTime ExpiryDate { get; set; }
+
+        public ICollection<Issue> Issues{ get; set; }
     }
 }

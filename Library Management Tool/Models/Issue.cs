@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualBasic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Library_Management_Tool.Models
 {
@@ -6,7 +7,9 @@ namespace Library_Management_Tool.Models
     {
         public int Id { get; set; }
         public int BookId { get; set; }
+        public Book Book { get; set; }
         public int MemberId { get; set; }
+        public Member Member { get; set; }
         public DateTime IssueDate { get; set; } = new DateTime(new DateTime().Year, new DateTime().Month, new DateTime().Day);
         public DateTime DueDate { get; set; }
         public DateTime? ReturnDate { get; set; } = null;
