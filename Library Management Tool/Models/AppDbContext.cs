@@ -11,12 +11,5 @@ namespace Library_Management_Tool.Models
         public DbSet<Publisher> Publishers { get; set; }
         public DbSet<Member> Members { get; set; }
         public DbSet<Issue> Issues { get; set; }
-
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<Book>().HasOne(b => b.Publisher).WithMany(p => p.Books).HasForeignKey(b => b.PublisherId);
-            modelBuilder.Entity<Issue>().HasOne(i => i.Member).WithMany(m => m.Issues).HasForeignKey(i => i.MemberId);
-            modelBuilder.Entity<Issue>().HasOne(i => i.Book).WithMany(b => b.Issues).HasForeignKey(i => i.BookId);
-        }
     }
 }
